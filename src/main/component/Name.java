@@ -1,4 +1,4 @@
-package main;
+package main.component;
 
 public class Name {
     private String firstName;

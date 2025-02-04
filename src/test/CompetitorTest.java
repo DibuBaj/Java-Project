@@ -6,9 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import main.CompetitionLevel;
-import main.Competitor;
-import main.Name;
+import main.component.CompetitionLevel;
+import main.component.Competitor;
+import main.component.Name;
 
 public class CompetitorTest {
 	@BeforeEach

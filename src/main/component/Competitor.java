@@ -1,4 +1,4 @@
-package main;
+package main.component;
 
 public class Competitor {
     private int id;
@@ -7,9 +7,11 @@ public class Competitor {
     private String country;
     private int age;
     private int[] scores;
+//    private String username;
+//    private String password;
     
     // Constructor
-    public Competitor(int id, Name name, CompetitionLevel level, String country, int age,int[] scores) {
+    public Competitor(int id, Name name,CompetitionLevel level,String country, int age,int[] scores) {
         this.id = id;
         this.name = name;
         this.level = level;
@@ -63,6 +65,18 @@ public class Competitor {
         return scores;
     }
     
+//    public String getUsername() {
+//    	return username;
+//    }
+//    
+//    public void setUsername(String username) {
+//    	this.username = username; 
+//    }
+//    
+//    public void setPassword(String password) {
+//    	this.password = password;
+//    }
+    
 //    Get overall score
     public double getOverallScore() {
     	if (scores == null || scores.length == 0) {
@@ -93,7 +107,7 @@ public class Competitor {
     public static void main(String[] args) {
     	Name name1 = new Name("Keith", "John", "Talbot");
     	int[] scores = {5,4,5,5,5};
-        Competitor competitor1 = new Competitor(100, name1, CompetitionLevel.BEGINNER, "UK", 21,scores);
+        Competitor competitor1 = new Competitor(100, name1,CompetitionLevel.BEGINNER, "UK", 21,scores);
         System.out.println(competitor1.getFullDetails());
         System.out.println(competitor1.getShortDetails());
     }
