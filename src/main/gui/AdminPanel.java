@@ -29,7 +29,6 @@ import javax.swing.table.DefaultTableModel;
 import main.component.CompetitionLevel;
 
 public class AdminPanel extends JFrame {
-
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField questionField;
@@ -38,10 +37,6 @@ public class AdminPanel extends JFrame {
 	private JTextField option2Field;
 	private JTextField option3Field;
 	private JTextField option4Field;
-	private JTable viewAllTable;
-	private JTable beginnerTable;
-	private JTable intermediateTable;
-	private JTable advanceTable;
 	private JComboBox<CompetitionLevel> levelField;
 
 	/**
@@ -60,49 +55,86 @@ public class AdminPanel extends JFrame {
 		});
 	}
 	String[] columnNames = { "ID", "Level", "Question", "Option1", "Option2", "Option3", "Option4", "Answer" };
+	private JTable viewAllTable;
+	private JTable beginnerTable;
+	private JTable intermediateTable;
+	private JTable advanceTable;
+	
 	private void loadQuestions() {
-		try {
-			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
-			String sql = "SELECT * FROM question";
-			PreparedStatement pstmt = conn.prepareStatement(sql);
-			ResultSet rs = pstmt.executeQuery();
+		
+	    try {
+	        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
+	        String sql = "SELECT * FROM question";
+	        PreparedStatement pstmt = conn.prepareStatement(sql);
+	        ResultSet rs = pstmt.executeQuery();
 
+	        // Make DefaultTableModel non-editable
+	        DefaultTableModel allModel = new DefaultTableModel(columnNames, 0) {
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false; // Prevent editing
+	            }
+	        };
+	        DefaultTableModel beginnerModel = new DefaultTableModel(columnNames, 0) {
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false;
+	            }
+	        };
+	        DefaultTableModel intermediateModel = new DefaultTableModel(columnNames, 0) {
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false;
+	            }
+	        };
+	        DefaultTableModel advanceModel = new DefaultTableModel(columnNames, 0) {
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false;
+	            }
+	        };
 
-			DefaultTableModel allModel = new DefaultTableModel(columnNames, 0);
-			DefaultTableModel beginnerModel = new DefaultTableModel(columnNames, 0);
-			DefaultTableModel intermediateModel = new DefaultTableModel(columnNames, 0);
-			DefaultTableModel advanceModel = new DefaultTableModel(columnNames, 0);
+	        while (rs.next()) {
+	            Object[] row = {
+	                rs.getInt("id"),
+	                rs.getString("level"),
+	                rs.getString("question"),
+	                rs.getString("option1"),
+	                rs.getString("option2"),
+	                rs.getString("option3"),
+	                rs.getString("option4"),
+	                rs.getString("answer")
+	            };
 
-			while (rs.next()) {
-				Object[] row = { rs.getInt("id"), rs.getString("level"), rs.getString("question"),
-						rs.getString("option1"), rs.getString("option2"), rs.getString("option3"),
-						rs.getString("option4"), rs.getString("answer") };
+	            // Add row to "View All"
+	            allModel.addRow(row);
 
-				allModel.addRow(row);
+	            // Add row to specific level-based tables
+	            String level = rs.getString("level");
+	            if (level.equalsIgnoreCase("BEGINNER")) {
+	                beginnerModel.addRow(row);
+	            } else if (level.equalsIgnoreCase("INTERMEDIATE")) {
+	                intermediateModel.addRow(row);
+	            } else if (level.equalsIgnoreCase("ADVANCED")) {
+	                advanceModel.addRow(row);
+	            }
+	        }
 
-				String level = rs.getString("level");
-				if (level.equalsIgnoreCase("BEGINNER")) {
-					beginnerModel.addRow(row);
-				} else if (level.equalsIgnoreCase("INTERMEDIATE")) {
-					intermediateModel.addRow(row);
-				} else if (level.equalsIgnoreCase("ADVANCED")) {
-					advanceModel.addRow(row);
-				}
-			}
+	        // Assign models to JTables (this was missing!)
+	        viewAllTable.setModel(allModel);
+	        beginnerTable.setModel(beginnerModel);
+	        intermediateTable.setModel(intermediateModel);
+	        advanceTable.setModel(advanceModel);
 
-			viewAllTable.setModel(allModel);
-			beginnerTable.setModel(beginnerModel);
-			intermediateTable.setModel(intermediateModel);
-			advanceTable.setModel(advanceModel);
-
-			rs.close();
-			pstmt.close();
-			conn.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Error loading questions.", "Error", JOptionPane.ERROR_MESSAGE);
-		}
+	        rs.close();
+	        pstmt.close();
+	        conn.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        JOptionPane.showMessageDialog(null, "Error loading questions.", "Error", JOptionPane.ERROR_MESSAGE);
+	    }
 	}
+
 	private void clearFields() {
 	    questionField.setText("");
 	    option1Field.setText("");
@@ -112,24 +144,30 @@ public class AdminPanel extends JFrame {
 	    answerField.setText("");
 	    levelField.setSelectedIndex(0); // Reset dropdown to the first item
 	}
-	private DefaultTableModel getNonEditableModel(String[] columns) {
-        return new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; 
-            }
-        };
-    }
+	
+	private void populateFieldsFromTable(JTable table) {
+	    int selectedRow = table.getSelectedRow();
+	    if (selectedRow != -1) {
+	        questionField.setText(table.getValueAt(selectedRow, 2).toString());
+	        option1Field.setText(table.getValueAt(selectedRow, 3).toString());
+	        option2Field.setText(table.getValueAt(selectedRow, 4).toString());
+	        option3Field.setText(table.getValueAt(selectedRow, 5).toString());
+	        option4Field.setText(table.getValueAt(selectedRow, 6).toString());
+	        answerField.setText(table.getValueAt(selectedRow, 7).toString());
+
+	        // Set the level in the combo box
+	        String level = table.getValueAt(selectedRow, 1).toString();
+	        levelField.setSelectedItem(CompetitionLevel.valueOf(level.toUpperCase()));
+	    }
+	}
+
 	/**
 	 * Create the frame.
 	 */
 	public AdminPanel() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		// Get the screen size using Toolkit
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		setSize(screenSize); // Set the frame to cover the entire screen
-		setLocationRelativeTo(null); // Center the window (optional)
+		setBounds(100, 100, 1800, 789);
 
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -295,48 +333,208 @@ public class AdminPanel extends JFrame {
 		question.add(createBtn);
 
 		JButton updateBtn = new JButton("Update");
+		updateBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// Determine which table has a selected row
+		        JTable selectedTable = null;
+		        if (viewAllTable.getSelectedRow() != -1) {
+		            selectedTable = viewAllTable;
+		        } else if (beginnerTable.getSelectedRow() != -1) {
+		            selectedTable = beginnerTable;
+		        } else if (intermediateTable.getSelectedRow() != -1) {
+		            selectedTable = intermediateTable;
+		        } else if (advanceTable.getSelectedRow() != -1) {
+		            selectedTable = advanceTable;
+		        }
+
+		        if (selectedTable == null) {
+		            JOptionPane.showMessageDialog(null, "Please select a row to update.", "No Selection", JOptionPane.WARNING_MESSAGE);
+		            return;
+		        }
+
+		        int selectedRow = selectedTable.getSelectedRow();
+		        if (selectedRow == -1) {
+		            JOptionPane.showMessageDialog(null, "No row selected.", "Update Error", JOptionPane.ERROR_MESSAGE);
+		            return;
+		        }
+
+		        // Get the ID of the selected row
+		        int id = Integer.parseInt(selectedTable.getValueAt(selectedRow, 0).toString());
+
+		        // Get existing values from the table
+		        String existingLevel = selectedTable.getValueAt(selectedRow, 1).toString();
+		        String existingQuestion = selectedTable.getValueAt(selectedRow, 2).toString();
+		        String existingOption1 = selectedTable.getValueAt(selectedRow, 3).toString();
+		        String existingOption2 = selectedTable.getValueAt(selectedRow, 4).toString();
+		        String existingOption3 = selectedTable.getValueAt(selectedRow, 5).toString();
+		        String existingOption4 = selectedTable.getValueAt(selectedRow, 6).toString();
+		        String existingAnswer = selectedTable.getValueAt(selectedRow, 7).toString();
+
+		        // Get updated values from input fields
+		        String updatedLevel = levelField.getSelectedItem().toString();
+		        String updatedQuestion = questionField.getText().trim();
+		        String updatedOption1 = option1Field.getText().trim();
+		        String updatedOption2 = option2Field.getText().trim();
+		        String updatedOption3 = option3Field.getText().trim();
+		        String updatedOption4 = option4Field.getText().trim();
+		        String updatedAnswer = answerField.getText().trim();
+
+		        // Check if any field has changed
+		        if (existingLevel.equals(updatedLevel) &&
+		            existingQuestion.equals(updatedQuestion) &&
+		            existingOption1.equals(updatedOption1) &&
+		            existingOption2.equals(updatedOption2) &&
+		            existingOption3.equals(updatedOption3) &&
+		            existingOption4.equals(updatedOption4) &&
+		            existingAnswer.equals(updatedAnswer)) {
+		            
+		            JOptionPane.showMessageDialog(null, "No fields were updated.", "No Changes", JOptionPane.INFORMATION_MESSAGE);
+		            return;
+		        }
+
+		        // If fields are changed, update the database
+		        try {
+		            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
+
+		            String sql = "UPDATE question SET level = ?, question = ?, option1 = ?, option2 = ?, option3 = ?, option4 = ?, answer = ? WHERE id = ?";
+		            PreparedStatement pstmt = conn.prepareStatement(sql);
+		            pstmt.setString(1, updatedLevel);
+		            pstmt.setString(2, updatedQuestion);
+		            pstmt.setString(3, updatedOption1);
+		            pstmt.setString(4, updatedOption2);
+		            pstmt.setString(5, updatedOption3);
+		            pstmt.setString(6, updatedOption4);
+		            pstmt.setString(7, updatedAnswer);
+		            pstmt.setInt(8, id);
+
+		            int rowsUpdated = pstmt.executeUpdate();
+		            pstmt.close();
+		            conn.close();
+
+		            if (rowsUpdated > 0) {
+		                JOptionPane.showMessageDialog(null, "Question updated successfully.", "Update Success", JOptionPane.INFORMATION_MESSAGE);
+		                loadQuestions(); // Refresh table data
+		            } else {
+		                JOptionPane.showMessageDialog(null, "Update failed. Try again.", "Update Error", JOptionPane.ERROR_MESSAGE);
+		            }
+
+		        } catch (Exception ex) {
+		            ex.printStackTrace();
+		            JOptionPane.showMessageDialog(null, "Error updating question.", "Database Error", JOptionPane.ERROR_MESSAGE);
+		        }
+			}
+		});
 		updateBtn.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		updateBtn.setBounds(342, 384, 144, 56);
 		question.add(updateBtn);
 
 		JButton btnNewButton_2 = new JButton("Delete");
+		btnNewButton_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// Determine which table has a selected row
+		        JTable selectedTable = null;
+		        if (viewAllTable.getSelectedRow() != -1) {
+		            selectedTable = viewAllTable;
+		        } else if (beginnerTable.getSelectedRow() != -1) {
+		            selectedTable = beginnerTable;
+		        } else if (intermediateTable.getSelectedRow() != -1) {
+		            selectedTable = intermediateTable;
+		        } else if (advanceTable.getSelectedRow() != -1) {
+		            selectedTable = advanceTable;
+		        }
+
+		        if (selectedTable == null) {
+		            JOptionPane.showMessageDialog(null, "Please select a row to delete.", "No Selection", JOptionPane.WARNING_MESSAGE);
+		            return;
+		        }
+
+		        int selectedRow = selectedTable.getSelectedRow();
+		        if (selectedRow == -1) {
+		            JOptionPane.showMessageDialog(null, "No row selected.", "Delete Error", JOptionPane.ERROR_MESSAGE);
+		            return;
+		        }
+
+		        // Get the ID of the selected row
+		        int id = Integer.parseInt(selectedTable.getValueAt(selectedRow, 0).toString());
+
+		        // Ask for confirmation
+		        int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this question?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+		        if (confirm != JOptionPane.YES_OPTION) {
+		            return;
+		        }
+
+		        // Delete from the database
+		        try {
+		            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
+		            String sql = "DELETE FROM question WHERE id = ?";
+		            PreparedStatement pstmt = conn.prepareStatement(sql);
+		            pstmt.setInt(1, id);
+
+		            int rowsDeleted = pstmt.executeUpdate();
+		            pstmt.close();
+		            conn.close();
+
+		            if (rowsDeleted > 0) {
+		                JOptionPane.showMessageDialog(null, "Question deleted successfully.", "Delete Success", JOptionPane.INFORMATION_MESSAGE);
+		                loadQuestions(); // Refresh table data
+		            } else {
+		                JOptionPane.showMessageDialog(null, "Delete failed. Try again.", "Delete Error", JOptionPane.ERROR_MESSAGE);
+		            }
+
+		        } catch (Exception ex) {
+		            ex.printStackTrace();
+		            JOptionPane.showMessageDialog(null, "Error deleting question.", "Database Error", JOptionPane.ERROR_MESSAGE);
+		        }
+			}
+		});
 		btnNewButton_2.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		btnNewButton_2.setBounds(135, 467, 144, 56);
 		question.add(btnNewButton_2);
 
 		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane_1.setBounds(637, 39, 863, 634);
+		tabbedPane_1.setBounds(601, 38, 956, 634);
 		question.add(tabbedPane_1);
-
-		JPanel allView = new JPanel();
-		tabbedPane_1.addTab("View All", null, allView, null);
-
-		viewAllTable = new JTable();
-		viewAllTable.setColumnSelectionAllowed(true);
-		allView.add(viewAllTable);
-
-		JPanel beginner = new JPanel();
-		tabbedPane_1.addTab("Beginner", null, beginner, null);
-
-		beginnerTable = new JTable();
-		beginner.add(beginnerTable);
-
-		JPanel intermediate = new JPanel();
-		tabbedPane_1.addTab("Intermediate", null, intermediate, null);
-
-		intermediateTable = new JTable();
-		intermediate.add(intermediateTable);
-
-		JPanel advanced = new JPanel();
-		tabbedPane_1.addTab("Advance", null, advanced, null);
-
-		advanceTable = new JTable();
-		advanced.add(advanceTable);
 		
-		viewAllTable.setModel(getNonEditableModel(columnNames));
-		beginnerTable.setModel(getNonEditableModel(columnNames));
-		intermediateTable.setModel(getNonEditableModel(columnNames));
-		advanceTable.setModel(getNonEditableModel(columnNames));
+		viewAllTable = new JTable();
+		tabbedPane_1.addTab("View All", null, viewAllTable, null);
+		
+		beginnerTable = new JTable();
+		tabbedPane_1.addTab("Beginner", null, beginnerTable, null);
+		
+		intermediateTable = new JTable();
+		tabbedPane_1.addTab("Intermediate", null, intermediateTable, null);
+		
+		advanceTable = new JTable();
+		tabbedPane_1.addTab("Advance", null, advanceTable, null);
+		
+		// Add selection listener to viewAllTable
+		viewAllTable.getSelectionModel().addListSelectionListener(event -> {
+		    if (!event.getValueIsAdjusting() && viewAllTable.getSelectedRow() != -1) {
+		        populateFieldsFromTable(viewAllTable);
+		    }
+		});
+
+		// Add selection listener to beginnerTable
+		beginnerTable.getSelectionModel().addListSelectionListener(event -> {
+		    if (!event.getValueIsAdjusting() && beginnerTable.getSelectedRow() != -1) {
+		        populateFieldsFromTable(beginnerTable);
+		    }
+		});
+
+		// Add selection listener to intermediateTable
+		intermediateTable.getSelectionModel().addListSelectionListener(event -> {
+		    if (!event.getValueIsAdjusting() && intermediateTable.getSelectedRow() != -1) {
+		        populateFieldsFromTable(intermediateTable);
+		    }
+		});
+
+		// Add selection listener to advanceTable
+		advanceTable.getSelectionModel().addListSelectionListener(event -> {
+		    if (!event.getValueIsAdjusting() && advanceTable.getSelectedRow() != -1) {
+		        populateFieldsFromTable(advanceTable);
+		    }
+		});
+
 		
 		JButton clearBtn = new JButton("Clear");
 		clearBtn.addActionListener(new ActionListener() {
@@ -347,6 +545,17 @@ public class AdminPanel extends JFrame {
 		clearBtn.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		clearBtn.setBounds(342, 467, 144, 56);
 		question.add(clearBtn);
+		
+		JButton logoutBtn = new JButton("Logout");
+		logoutBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				LandingPage lp = new LandingPage();
+        		lp.setVisible(true);
+        		dispose();
+			}
+		});
+		logoutBtn.setBounds(1501, 11, 89, 23);
+		question.add(logoutBtn);
 
 		loadQuestions();
 
@@ -354,6 +563,18 @@ public class AdminPanel extends JFrame {
 		JPanel competitor = new JPanel();
 		competitor.setBackground(Color.WHITE);
 		tabbedPane.addTab("Competitor", null, competitor, null);
+		competitor.setLayout(null);
+		
+		JButton logoutBtn_1 = new JButton("Logout");
+		logoutBtn_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				LandingPage lp = new LandingPage();
+        		lp.setVisible(true);
+        		dispose();
+			}
+		});
+		logoutBtn_1.setBounds(1502, 11, 82, 23);
+		competitor.add(logoutBtn_1);
 
 		// Adjust the size of the outer tabs
 		for (int i = 0; i < tabbedPane.getTabCount(); i++) {

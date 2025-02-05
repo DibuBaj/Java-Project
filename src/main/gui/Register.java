@@ -35,6 +35,7 @@ public class Register extends JFrame {
     private JTextField countryField;
     private JLabel level;
     private JComboBox<CompetitionLevel> levelField;
+    private JButton backBtn;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
@@ -49,7 +50,7 @@ public class Register extends JFrame {
 
     public Register() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 713, 559);
+        setBounds(100, 100, 794, 529);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
@@ -130,7 +131,7 @@ public class Register extends JFrame {
                 registerUser();
             }
         });
-        registerBtn.setBounds(419, 468, 150, 40);
+        registerBtn.setBounds(242, 432, 150, 40);
         contentPane.add(registerBtn);
         
         level = new JLabel("Level:");
@@ -141,6 +142,17 @@ public class Register extends JFrame {
         levelField = new JComboBox<>(CompetitionLevel.values());
         levelField.setBounds(300, 228, 289, 31);
         contentPane.add(levelField);
+        
+        backBtn = new JButton("Back");
+        backBtn.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		LandingPage lp = new LandingPage();
+        		lp.setVisible(true);
+        		dispose();
+        	}
+        });
+        backBtn.setBounds(461, 432, 150, 40);
+        contentPane.add(backBtn);
     }
 
     private void registerUser() {

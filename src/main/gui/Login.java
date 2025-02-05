@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import java.awt.event.ActionListener;
 
 public class Login extends JFrame {
 
@@ -118,7 +119,18 @@ public class Login extends JFrame {
            
         });
 
-        loginBtn.setBounds(451, 325, 150, 40);
+        loginBtn.setBounds(332, 318, 150, 40);
         contentPane.add(loginBtn);
+        
+        JButton backBtn = new JButton("Back");
+        backBtn.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		LandingPage lp = new LandingPage();
+        		lp.setVisible(true);
+        		dispose();
+        	}
+        });
+        backBtn.setBounds(633, 318, 150, 40);
+        contentPane.add(backBtn);
     }
 }
