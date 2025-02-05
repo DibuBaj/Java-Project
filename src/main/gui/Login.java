@@ -37,6 +37,8 @@ public class Login extends JFrame {
 
     public Login() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       
+        
         setBounds(100, 100, 1067, 590);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -55,12 +57,12 @@ public class Login extends JFrame {
         contentPane.add(password);
 
         usernameField = new JTextField();
-        usernameField.setBounds(348, 143, 309, 41);
+        usernameField.setBounds(398, 143, 309, 41);
         contentPane.add(usernameField);
         usernameField.setColumns(10);
 
         passwordField = new JPasswordField(); // Changed from JTextField to JPasswordField
-        passwordField.setBounds(348, 225, 309, 41);
+        passwordField.setBounds(398, 221, 309, 41);
         contentPane.add(passwordField);
 
         JButton loginBtn = new JButton("Login");

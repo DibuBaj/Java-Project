@@ -62,12 +62,12 @@ public class CompetitonDB {
             String sql = "CREATE TABLE IF NOT EXISTS question ("
                     + " id INT AUTO_INCREMENT PRIMARY KEY, "
                     + " level VARCHAR(100), "
-                    + " question VARCHAR(100), "
+                    + " question TEXT, "
                     + " option1 VARCHAR(100), "
                     + " option2 VARCHAR(100), "
                     + " option3 VARCHAR(100), "
                     + " option4 VARCHAR(100), "
-                    + " correct VARCHAR(100) "                    
+                    + " answer VARCHAR(100) "                    
                     + ")";
 
             Statement stmt = conn.createStatement();

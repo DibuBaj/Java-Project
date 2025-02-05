@@ -49,7 +49,7 @@ public class Register extends JFrame {
 
     public Register() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 999, 584);
+        setBounds(100, 100, 713, 559);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
@@ -124,14 +124,14 @@ public class Register extends JFrame {
         passwordField.setBounds(300, 353, 289, 32);
         contentPane.add(passwordField);
 
-        JButton signupBtn = new JButton("Register");
-        signupBtn.addActionListener(new ActionListener() {
+        JButton registerBtn = new JButton("Register");
+        registerBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 registerUser();
             }
         });
-        signupBtn.setBounds(419, 468, 150, 40);
-        contentPane.add(signupBtn);
+        registerBtn.setBounds(419, 468, 150, 40);
+        contentPane.add(registerBtn);
         
         level = new JLabel("Level:");
         level.setFont(new Font("Tahoma", Font.PLAIN, 20));
