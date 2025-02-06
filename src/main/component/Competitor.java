@@ -79,18 +79,14 @@ public class Competitor {
     
 //    Get overall score
     public double getOverallScore() {
-    	if (scores == null || scores.length == 0) {
-            return 0; // Return 0 if no scores are available
-        }
-    	
-    	int n = scores.length;
-    	double sum = 0;
-    	
-    	for(int i=0;i<n;i++) {
-    		sum += scores[i];
-    	}
-    	
-    	return sum/n;
+    	    if (scores == null || scores.length == 0) {
+    	        return 0;
+    	    }
+    	    double sum = 0;
+    	    for (int score : scores) {
+    	        sum += score;
+    	    }
+    	    return sum / scores.length;
     }
     
 //    Get competitor detail

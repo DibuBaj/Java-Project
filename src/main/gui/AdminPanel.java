@@ -42,18 +42,18 @@ public class AdminPanel extends JFrame {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					AdminPanel frame = new AdminPanel();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+//	public static void main(String[] args) {
+//		EventQueue.invokeLater(new Runnable() {
+//			public void run() {
+//				try {
+//					AdminPanel frame = new AdminPanel();
+//					frame.setVisible(true);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
+//	}
 	String[] columnNames = { "ID", "Level", "Question", "Option1", "Option2", "Option3", "Option4", "Answer" };
 	private JTable viewAllTable;
 	private JTable beginnerTable;

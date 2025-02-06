@@ -98,9 +98,9 @@ public class Login extends JFrame {
                     if (rs.next()) {
                         // Login successful
                         JOptionPane.showMessageDialog(Login.this, "Login Successful!", "Login", JOptionPane.INFORMATION_MESSAGE);
-                        // Proceed to the next window (if any)
-                        // new Dashboard().setVisible(true);
-                        // dispose();
+                        CompetitorPanel cp = new CompetitorPanel(usernameInput);
+                        cp.setVisible(true);
+                         dispose();
                     } else {
                         // Invalid credentials
                         JOptionPane.showMessageDialog(Login.this, "Invalid username or password.", "Login Error", JOptionPane.ERROR_MESSAGE);
