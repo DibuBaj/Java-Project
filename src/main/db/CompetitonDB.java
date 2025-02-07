@@ -38,9 +38,9 @@ public class CompetitonDB {
                     + " age INT, "
                     + " level VARCHAR(100), "
                     + " country VARCHAR(100), "
-                    + " scores JSON, "  // Cleaned indentation
+                    + " scores VARCHAR(100), "  
                     + " username VARCHAR(100), "
-                    + " password VARCHAR(100)" // Removed trailing comma
+                    + " password VARCHAR(100)" 
                     + ")";
 
             Statement stmt = conn.createStatement();
@@ -55,6 +55,7 @@ public class CompetitonDB {
     }
     
     static void questionTable() {
+    	
     	try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", user, password);
             System.out.println("Connection Successful");

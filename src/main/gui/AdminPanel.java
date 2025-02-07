@@ -3,9 +3,7 @@ package main.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
@@ -20,6 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -39,21 +38,7 @@ public class AdminPanel extends JFrame {
 	private JTextField option4Field;
 	private JComboBox<CompetitionLevel> levelField;
 
-	/**
-	 * Launch the application.
-	 */
-//	public static void main(String[] args) {
-//		EventQueue.invokeLater(new Runnable() {
-//			public void run() {
-//				try {
-//					AdminPanel frame = new AdminPanel();
-//					frame.setVisible(true);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-//	}
+	
 	String[] columnNames = { "ID", "Level", "Question", "Option1", "Option2", "Option3", "Option4", "Answer" };
 	private JTable viewAllTable;
 	private JTable beginnerTable;
@@ -62,32 +47,32 @@ public class AdminPanel extends JFrame {
 	
 	private void loadQuestions() {
 		
-	    try {
+		try {
 	        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
 	        String sql = "SELECT * FROM question";
 	        PreparedStatement pstmt = conn.prepareStatement(sql);
 	        ResultSet rs = pstmt.executeQuery();
 
-	        // Make DefaultTableModel non-editable
-	        DefaultTableModel allModel = new DefaultTableModel(columnNames, 0) {
-	            @Override
-	            public boolean isCellEditable(int row, int column) {
-	                return false; // Prevent editing
-	            }
-	        };
-	        DefaultTableModel beginnerModel = new DefaultTableModel(columnNames, 0) {
+	        // Create the models *with column names* and 0 rows:
+	        DefaultTableModel allModel = new DefaultTableModel(columnNames, 0) { // Correct order
 	            @Override
 	            public boolean isCellEditable(int row, int column) {
 	                return false;
 	            }
 	        };
-	        DefaultTableModel intermediateModel = new DefaultTableModel(columnNames, 0) {
+	        DefaultTableModel beginnerModel = new DefaultTableModel(columnNames, 0) { // Correct order
 	            @Override
 	            public boolean isCellEditable(int row, int column) {
 	                return false;
 	            }
 	        };
-	        DefaultTableModel advanceModel = new DefaultTableModel(columnNames, 0) {
+	        DefaultTableModel intermediateModel = new DefaultTableModel(columnNames, 0) { // Correct order
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false;
+	            }
+	        };
+	        DefaultTableModel advanceModel = new DefaultTableModel(columnNames, 0) { // Correct order
 	            @Override
 	            public boolean isCellEditable(int row, int column) {
 	                return false;
@@ -106,11 +91,9 @@ public class AdminPanel extends JFrame {
 	                rs.getString("answer")
 	            };
 
-	            // Add row to "View All"
-	            allModel.addRow(row);
-
-	            // Add row to specific level-based tables
 	            String level = rs.getString("level");
+	            allModel.addRow(row); // Add to allModel *first*
+
 	            if (level.equalsIgnoreCase("BEGINNER")) {
 	                beginnerModel.addRow(row);
 	            } else if (level.equalsIgnoreCase("INTERMEDIATE")) {
@@ -120,7 +103,7 @@ public class AdminPanel extends JFrame {
 	            }
 	        }
 
-	        // Assign models to JTables (this was missing!)
+	        // Assign models to JTables.  This is crucial!
 	        viewAllTable.setModel(allModel);
 	        beginnerTable.setModel(beginnerModel);
 	        intermediateTable.setModel(intermediateModel);
@@ -494,47 +477,48 @@ public class AdminPanel extends JFrame {
 		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane_1.setBounds(601, 38, 956, 634);
 		question.add(tabbedPane_1);
-		
+
+		// Wrap each table inside a JScrollPane
 		viewAllTable = new JTable();
-		tabbedPane_1.addTab("View All", null, viewAllTable, null);
-		
+		JScrollPane viewAllScrollPane = new JScrollPane(viewAllTable);
+		tabbedPane_1.addTab("View All", null, viewAllScrollPane, null);
+
 		beginnerTable = new JTable();
-		tabbedPane_1.addTab("Beginner", null, beginnerTable, null);
-		
+		JScrollPane beginnerScrollPane = new JScrollPane(beginnerTable);
+		tabbedPane_1.addTab("Beginner", null, beginnerScrollPane, null);
+
 		intermediateTable = new JTable();
-		tabbedPane_1.addTab("Intermediate", null, intermediateTable, null);
-		
+		JScrollPane intermediateScrollPane = new JScrollPane(intermediateTable);
+		tabbedPane_1.addTab("Intermediate", null, intermediateScrollPane, null);
+
 		advanceTable = new JTable();
-		tabbedPane_1.addTab("Advance", null, advanceTable, null);
-		
-		// Add selection listener to viewAllTable
+		JScrollPane advanceScrollPane = new JScrollPane(advanceTable);
+		tabbedPane_1.addTab("Advance", null, advanceScrollPane, null);
+
+		// Add selection listeners to each table
 		viewAllTable.getSelectionModel().addListSelectionListener(event -> {
 		    if (!event.getValueIsAdjusting() && viewAllTable.getSelectedRow() != -1) {
 		        populateFieldsFromTable(viewAllTable);
 		    }
 		});
 
-		// Add selection listener to beginnerTable
 		beginnerTable.getSelectionModel().addListSelectionListener(event -> {
 		    if (!event.getValueIsAdjusting() && beginnerTable.getSelectedRow() != -1) {
 		        populateFieldsFromTable(beginnerTable);
 		    }
 		});
 
-		// Add selection listener to intermediateTable
 		intermediateTable.getSelectionModel().addListSelectionListener(event -> {
 		    if (!event.getValueIsAdjusting() && intermediateTable.getSelectedRow() != -1) {
 		        populateFieldsFromTable(intermediateTable);
 		    }
 		});
 
-		// Add selection listener to advanceTable
 		advanceTable.getSelectionModel().addListSelectionListener(event -> {
 		    if (!event.getValueIsAdjusting() && advanceTable.getSelectedRow() != -1) {
 		        populateFieldsFromTable(advanceTable);
 		    }
 		});
-
 		
 		JButton clearBtn = new JButton("Clear");
 		clearBtn.addActionListener(new ActionListener() {

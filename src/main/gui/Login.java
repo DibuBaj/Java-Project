@@ -23,7 +23,7 @@ public class Login extends JFrame {
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
     private JTextField usernameField;
-    private JPasswordField passwordField; // Changed to JPasswordField for security
+    private JPasswordField passwordField;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
