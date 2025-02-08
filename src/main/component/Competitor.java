@@ -61,8 +61,16 @@ public class Competitor {
         this.age = age;
     }
     
+    
+    
+    
+    
     public int[] getScoreArray() {
         return scores;
+    }
+    
+    public void setScoreArray(int[] scores) {
+    	this.scores = scores;
     }
     
 //    public String getUsername() {

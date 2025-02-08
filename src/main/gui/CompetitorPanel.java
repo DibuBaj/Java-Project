@@ -10,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -78,8 +80,12 @@ public class CompetitorPanel extends JFrame {
     private JTable table;
     private JTextPane questionField;
     public Competitor competitor;
+    private int currentQuestionIndex = 0;
+    private int playerScore = 0;
     List<Question> questionlist;
-  
+    private List<Question> selectedQuestions = new ArrayList<>();
+    private JButton option1Btn, option2Btn, option3Btn, option4Btn, btnPlay;
+    private JPanel gamePanel, initialPanel;
     /**
      * Create the frame and fetch user data.
      */
@@ -172,7 +178,7 @@ public class CompetitorPanel extends JFrame {
   
 
      // Overlay Panel (Game Panel) - Initially Hidden
-     JPanel gamePanel = new JPanel();
+     gamePanel = new JPanel();
      gamePanel.setBounds(0, 0, 944, 472); // Ensure full overlay
      gamePanel.setBackground(Color.WHITE); // Solid white overlay
      gamePanel.setOpaque(true); // Ensure background color is visible
@@ -180,7 +186,7 @@ public class CompetitorPanel extends JFrame {
      gamePanel.setVisible(false); // Initially hidden
      Game.add(gamePanel);
      
-     JButton option1Btn = new JButton("");
+     option1Btn = new JButton("");
      option1Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
      option1Btn.addActionListener(new ActionListener() {
      	public void actionPerformed(ActionEvent e) {
@@ -189,7 +195,7 @@ public class CompetitorPanel extends JFrame {
      option1Btn.setBounds(140, 228, 203, 62);
      gamePanel.add(option1Btn);
      
-     JButton option2Btn = new JButton("");
+     option2Btn = new JButton("");
      option2Btn.addActionListener(new ActionListener() {
      	public void actionPerformed(ActionEvent e) {
      	}
@@ -198,12 +204,12 @@ public class CompetitorPanel extends JFrame {
      option2Btn.setBounds(526, 228, 203, 62);
      gamePanel.add(option2Btn);
      
-     JButton option3Btn = new JButton("");
+     option3Btn = new JButton("");
      option3Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
      option3Btn.setBounds(140, 342, 203, 62);
      gamePanel.add(option3Btn);
      
-     JButton option4Btn = new JButton("");
+     option4Btn = new JButton("");
      option4Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
      option4Btn.setBounds(526, 342, 203, 62);
      gamePanel.add(option4Btn);
@@ -215,7 +221,7 @@ public class CompetitorPanel extends JFrame {
      gamePanel.add(questionField);
      
   // Initial Panel (Visible at Start)
-     JPanel initialPanel = new JPanel();
+     initialPanel = new JPanel();
      initialPanel.setBounds(0, 0, 944, 472);
      initialPanel.setLayout(null);
      initialPanel.setVisible(true); // Make sure it's visible
@@ -227,23 +233,25 @@ public class CompetitorPanel extends JFrame {
      quizTitle.setBounds(361, 11, 123, 31);
      initialPanel.add(quizTitle);
 
-     JButton btnPlay = new JButton("Play");
+     btnPlay = new JButton("Play");
      btnPlay.setFont(new Font("Tahoma", Font.PLAIN, 20));
-     btnPlay.setBounds(367, 174, 117, 51);
+     btnPlay.setBounds(345, 174, 180, 51);
      initialPanel.add(btnPlay);
 
-     // Show gamePanel when Play is clicked
+     option1Btn.addActionListener(e -> checkAnswer(option1Btn.getText()));
+     option2Btn.addActionListener(e -> checkAnswer(option2Btn.getText()));
+     option3Btn.addActionListener(e -> checkAnswer(option3Btn.getText()));
+     option4Btn.addActionListener(e -> checkAnswer(option4Btn.getText()));
+
      btnPlay.addActionListener(e -> {
          initialPanel.setVisible(false);
+         startGame();
          gamePanel.setVisible(true);
-         questionlist = fetchQuestion(competitor);
-         System.out.println(questionlist);
      });
 
-     	
-     	
         
         fetchDataFromDatabase(username);
+        questionlist = fetchQuestion(competitor);
     }
 
     /**
@@ -257,41 +265,48 @@ public class CompetitorPanel extends JFrame {
                 ResultSet rs = pstmt.executeQuery();
 
                 if (rs.next()) {
-                    // Extract user data
                     int id = rs.getInt("id");
                     String fullName = rs.getString("name");
                     int age = rs.getInt("age");
                     String levelStr = rs.getString("level");
                     String country = rs.getString("country");
-                    String scoresStr = rs.getString("scores"); // Get the scores string
+                    String scoresStr = rs.getString("scores");
 
-                    // Convert level string to Enum
                     CompetitionLevel level = CompetitionLevel.valueOf(levelStr.toUpperCase());
 
-                    // Parse name (Assuming format "First Middle Last")
+                    // Parse name
                     String[] nameParts = fullName.split(" ");
                     String firstName = nameParts.length > 0 ? nameParts[0] : "";
                     String middleName = nameParts.length > 2 ? nameParts[1] : "";
                     String lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
 
-                    // Parse the scores
                     int[] scores = parseScores(scoresStr);
-
-                    // Create Name object
                     Name name = new Name(firstName, middleName, lastName);
-
-                    // Create Competitor object
                     competitor = new Competitor(id, name, level, country, age, scores);
 
-                    // Set UI fields
+                 // Set UI fields
                     nameField.setText(competitor.getName());
                     usernameField.setText(username);
                     levelField.setText(competitor.getLevel().toString());
                     ageField.setText(String.valueOf(competitor.getAge()));
                     countryField.setText(competitor.getCountry());
 
-                    // Update the table with scores
+                    // Update GUI score table
                     updateScoreTable(scores);
+
+                    // Count non-zero scores to determine play eligibility
+                    int playedGames = 0;
+                    for (int score : scores) {
+                        if (score > 0) {
+                            playedGames++;
+                        }
+                    }
+
+                    // Disable play button only if 5 actual games have been played
+                    if (playedGames >= 5) {
+                        btnPlay.setEnabled(false);
+                        btnPlay.setText("Limit Reached");
+                    }
                 } else {
                     JOptionPane.showMessageDialog(null, "User not found.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -305,38 +320,37 @@ public class CompetitorPanel extends JFrame {
     }
 
     private int[] parseScores(String scoresStr) {
-        // If scores are in the format "[]" or empty, return an empty array
-        if (scoresStr == null || scoresStr.equals("[]") || scoresStr.isEmpty()) {
-            return new int[5]; // Return a default array of 5 zeros (or adjust as needed)
+        int[] scores = new int[5]; // Default 5 zeros
+
+        if (scoresStr == null || scoresStr.trim().isEmpty()) {
+            return scores; // Return default [0,0,0,0,0] if empty
         }
 
-        // Split the string by commas and parse the numbers
-        String[] scoreStrings = scoresStr.split(",");
-        int[] scores = new int[scoreStrings.length];
-        for (int i = 0; i < scoreStrings.length; i++) {
+        // Split the comma-separated string and convert to int array
+        String[] parts = scoresStr.split(",");
+        for (int i = 0; i < parts.length && i < 5; i++) {
             try {
-                scores[i] = Integer.parseInt(scoreStrings[i].trim());
+                scores[i] = Integer.parseInt(parts[i].trim());
             } catch (NumberFormatException e) {
-                scores[i] = 0; // If there’s an invalid number, set it to 0
+                scores[i] = 0; // Handle invalid values safely
             }
         }
         return scores;
     }
 
     private void updateScoreTable(int[] scores) {
-        // Create a DefaultTableModel with the column names for the table
         String[] columnNames = {"Score1", "Score2", "Score3", "Score4", "Score5", "Overall Score"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 1) {
-        	 @Override
-	            public boolean isCellEditable(int row, int column) {
-	                return false;
-	          }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         table.setModel(model);
 
-        // Set individual scores in the table
-        for (int i = 0; i < scores.length; i++) {
-            table.setValueAt(scores[i], 0, i); // Set the scores in the first row
+        // Ensure the table has 5 score slots + overall score
+        for (int i = 0; i < 5; i++) {
+            table.setValueAt(i < scores.length ? scores[i] : 0, 0, i);
         }
 
         // Calculate and set the overall score
@@ -344,9 +358,9 @@ public class CompetitorPanel extends JFrame {
         for (int score : scores) {
             overallScore += score;
         }
-        table.setValueAt(overallScore, 0, scores.length); // Set the overall score in the last column
+        table.setValueAt(overallScore, 0, 5);
     }
-    
+
     public List<Question> fetchQuestion(Competitor comp) {
         List<Question> questionList = new ArrayList<>();
 
@@ -390,4 +404,139 @@ public class CompetitorPanel extends JFrame {
         }
         return questionList;
     }
+    
+    private void startGame() {
+        int[] scores = competitor.getScoreArray();
+
+        // Count non-zero scores to check if the player has played 5 times
+        int playedGames = 0;
+        for (int score : scores) {
+            if (score > 0) {
+                playedGames++;
+            }
+        }
+
+        if (playedGames >= 5) {
+            JOptionPane.showMessageDialog(null, "You have already played 5 times!", "Game Over", JOptionPane.WARNING_MESSAGE);
+            btnPlay.setEnabled(false);
+            btnPlay.setText("Limit Reached");
+            return; // 🚀 **Ensure game does NOT start**
+        }
+
+        if (questionlist == null || questionlist.size() < 5) {
+            JOptionPane.showMessageDialog(null, "Not enough questions in the database!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Shuffle and pick 5 random questions
+        Collections.shuffle(questionlist, new Random());
+        selectedQuestions = questionlist.subList(0, 5);
+
+        currentQuestionIndex = 0;
+        playerScore = 0;
+        displayQuestion();
+    }
+
+    private void displayQuestion() {
+        if (currentQuestionIndex >= selectedQuestions.size()) {
+            endGame();
+            return;
+        }
+
+        Question currentQuestion = selectedQuestions.get(currentQuestionIndex);
+        questionField.setText(currentQuestion.getQuestion());
+
+        // Set answer options on buttons
+        option1Btn.setText(currentQuestion.getOption1());
+        option2Btn.setText(currentQuestion.getOption2());
+        option3Btn.setText(currentQuestion.getOption3());
+        option4Btn.setText(currentQuestion.getOption4());
+    }
+
+    private void checkAnswer(String selectedAnswer) {
+        Question currentQuestion = selectedQuestions.get(currentQuestionIndex);
+        if (selectedAnswer.equals(currentQuestion.getAnswer())) {
+            playerScore += 1; 
+        }
+
+        currentQuestionIndex++;
+        displayQuestion();
+    }
+
+    private void endGame() {
+        JOptionPane.showMessageDialog(null, "Game Over! Your score: " + playerScore, "Game Over", JOptionPane.INFORMATION_MESSAGE);
+
+        // Save updated score to database
+        updateScoreInDatabase(playerScore);
+
+        // ✅ **Re-check play limit AFTER score is updated**
+        int playedGames = 0;
+        for (int score : competitor.getScoreArray()) {
+            if (score > 0) {
+                playedGames++;
+            }
+        }
+
+        // ✅ **Disable play button if limit reached**
+        if (playedGames >= 5) {
+            btnPlay.setEnabled(false);
+            btnPlay.setText("Limit Reached");
+        }
+
+        // Update GUI table with new score
+        updateScoreTable(competitor.getScoreArray());
+
+        gamePanel.setVisible(false);
+        initialPanel.setVisible(true);
+    }
+
+    private void updateScoreInDatabase(int newScore) {
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "")) {
+            int[] scores = competitor.getScoreArray();
+
+            // Find first empty slot (0) and insert the new score
+            boolean updated = false;
+            for (int i = 0; i < scores.length; i++) {
+                if (scores[i] == 0) {
+                    scores[i] = newScore;
+                    updated = true;
+                    break;
+                }
+            }
+
+            // If no slot was found, alert user
+            if (!updated) {
+                JOptionPane.showMessageDialog(null, "No available slot to store score.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Convert scores array to a comma-separated string
+            StringBuilder scoreString = new StringBuilder();
+            for (int i = 0; i < scores.length; i++) {
+                if (i > 0) {
+                    scoreString.append(",");
+                }
+                scoreString.append(scores[i]);
+            }
+
+            // Update the database
+            String sql = "UPDATE user SET scores = ? WHERE id = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, scoreString.toString());
+                pstmt.setInt(2, competitor.getId());
+                pstmt.executeUpdate();
+            }
+
+            // ✅ **Update the `competitor` object with new scores**
+            competitor.setScoreArray(scores);
+
+            // ✅ **Refresh the UI immediately**
+            updateScoreTable(scores);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error updating score in database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
 }

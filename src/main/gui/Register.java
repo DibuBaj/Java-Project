@@ -190,7 +190,7 @@ public class Register extends JFrame {
             pstmt.setInt(2, Integer.parseInt(age));
             pstmt.setString(3,level.name());
             pstmt.setString(4, country);
-            pstmt.setString(5, "[]"); 
+            pstmt.setString(5, "0,0,0,0,0"); 
             pstmt.setString(6, username);
             pstmt.setString(7, password);
             pstmt.executeUpdate();
