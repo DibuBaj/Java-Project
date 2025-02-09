@@ -14,11 +14,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -29,63 +31,30 @@ import javax.swing.table.DefaultTableModel;
 import main.component.CompetitionLevel;
 import main.component.Competitor;
 import main.component.Name;
+import main.component.Question;
 
 
 
-class Question {
-    private int id;
-    private String level;
-    private String question;
-    private String option1;
-    private String option2;
-    private String option3;
-    private String option4;
-    private String answer;
-
-    // Constructor
-    public Question(int id, String level, String question, String option1, String option2, String option3, String option4, String answer) {
-        this.id = id;
-        this.level = level;
-        this.question = question;
-        this.option1 = option1;
-        this.option2 = option2;
-        this.option3 = option3;
-        this.option4 = option4;
-        this.answer = answer;
-    }
-
-    // Getters
-    public int getId() { return id; }
-    public String getLevel() { return level; }
-    public String getQuestion() { return question; }
-    public String getOption1() { return option1; }
-    public String getOption2() { return option2; }
-    public String getOption3() { return option3; }
-    public String getOption4() { return option4; }
-    public String getAnswer() { return answer; }
-
-    @Override
-    public String toString() {
-        return "Question: " + question + "\n" +
-               "A) " + option1 + " B) " + option2 + " C) " + option3 + " D) " + option4 + "Answer:"+answer+"\n";
-    }
-}
 
 
 public class CompetitorPanel extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
-    private JLabel nameField, usernameField, levelField, ageField, countryField;
-    private JTable table;
+    private JLabel competitorIdField,nameField, usernameField, levelField, ageField, countryField;
+    private JTable scoreTable;
     private JTextPane questionField;
     public Competitor competitor;
     private int currentQuestionIndex = 0;
     private int playerScore = 0;
     List<Question> questionlist;
     private List<Question> selectedQuestions = new ArrayList<>();
-    private JButton option1Btn, option2Btn, option3Btn, option4Btn, btnPlay;
+    private JRadioButton option1Btn, option2Btn, option3Btn, option4Btn;
+    private ButtonGroup optionGroup;
+    private JButton btnPlay, btnSubmitAnswer;
     private JPanel gamePanel, initialPanel;
+    private JTable highestScoreTable;
+    private DefaultTableModel highestTableModel;
     /**
      * Create the frame and fetch user data.
      */
@@ -110,7 +79,7 @@ public class CompetitorPanel extends JFrame {
         profile.add(fullNameLabel);
 
         nameField = new JLabel("");
-        nameField.setBounds(260, 81, 185, 14);
+        nameField.setBounds(288, 81, 185, 14);
         profile.add(nameField);
 
         JLabel usernameLabel = new JLabel("Username:");
@@ -118,7 +87,7 @@ public class CompetitorPanel extends JFrame {
         profile.add(usernameLabel);
 
         usernameField = new JLabel("");
-        usernameField.setBounds(260, 113, 185, 14);
+        usernameField.setBounds(288, 113, 185, 14);
         profile.add(usernameField);
 
         JLabel levelLabel = new JLabel("Level:");
@@ -126,7 +95,7 @@ public class CompetitorPanel extends JFrame {
         profile.add(levelLabel);
 
         levelField = new JLabel("");
-        levelField.setBounds(260, 142, 91, 14);
+        levelField.setBounds(288, 142, 91, 14);
         profile.add(levelField);
 
         JLabel ageLabel = new JLabel("Age:");
@@ -134,7 +103,7 @@ public class CompetitorPanel extends JFrame {
         profile.add(ageLabel);
 
         ageField = new JLabel("");
-        ageField.setBounds(260, 179, 46, 14);
+        ageField.setBounds(288, 179, 46, 14);
         profile.add(ageField);
 
         JLabel countryLabel = new JLabel("Country:");
@@ -142,7 +111,7 @@ public class CompetitorPanel extends JFrame {
         profile.add(countryLabel);
 
         countryField = new JLabel("");
-        countryField.setBounds(260, 204, 100, 14);
+        countryField.setBounds(288, 204, 100, 14);
         profile.add(countryField);
         
 
@@ -150,11 +119,11 @@ public class CompetitorPanel extends JFrame {
      String[] columnNames = {"Score1", "Score2", "Score3", "Score4", "Score5", "Overall Score"};
 
      // Create table model with column names
-     DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-     table = new JTable(model);
+     DefaultTableModel scoreTableModel = new DefaultTableModel(columnNames, 0);
+     scoreTable = new JTable(scoreTableModel);
 
      // Wrap table inside JScrollPane to ensure headers are displayed
-     JScrollPane scrollPane = new JScrollPane(table);
+     JScrollPane scrollPane = new JScrollPane(scoreTable);
      scrollPane.setBounds(188, 252, 516, 47);
      profile.add(scrollPane);
      
@@ -168,6 +137,28 @@ public class CompetitorPanel extends JFrame {
      });
      logoutBtn.setBounds(809, 11, 89, 23);
      profile.add(logoutBtn);
+     
+     JLabel competitorId = new JLabel("Competitor Id:");
+     competitorId.setBounds(186, 56, 92, 14);
+     profile.add(competitorId);
+     
+     competitorIdField = new JLabel("");
+     competitorIdField.setBounds(288, 56, 185, 14);
+     profile.add(competitorIdField);
+     
+     JScrollPane scrollPane_1 = new JScrollPane();
+     scrollPane_1.setBounds(186, 330, 268, 96);
+     profile.add(scrollPane_1);
+     
+     
+     String[] highScoreLabel = {"Highest Score", "Game No."};
+
+     highestTableModel = new DefaultTableModel(highScoreLabel, 0);
+
+     highestScoreTable = new JTable(highestTableModel);
+
+     scrollPane_1.setViewportView(highestScoreTable);
+
         
 
 
@@ -186,33 +177,47 @@ public class CompetitorPanel extends JFrame {
      gamePanel.setVisible(false); // Initially hidden
      Game.add(gamePanel);
      
-     option1Btn = new JButton("");
+     option1Btn = new JRadioButton("");
      option1Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
      option1Btn.addActionListener(new ActionListener() {
      	public void actionPerformed(ActionEvent e) {
      	}
      });
-     option1Btn.setBounds(140, 228, 203, 62);
      gamePanel.add(option1Btn);
      
-     option2Btn = new JButton("");
+     option2Btn = new JRadioButton("");
      option2Btn.addActionListener(new ActionListener() {
      	public void actionPerformed(ActionEvent e) {
      	}
      });
      option2Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
-     option2Btn.setBounds(526, 228, 203, 62);
      gamePanel.add(option2Btn);
      
-     option3Btn = new JButton("");
+     option3Btn = new JRadioButton("");
      option3Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
-     option3Btn.setBounds(140, 342, 203, 62);
      gamePanel.add(option3Btn);
      
-     option4Btn = new JButton("");
+     option4Btn = new JRadioButton("");
      option4Btn.setFont(new Font("Tahoma", Font.PLAIN, 20));
-     option4Btn.setBounds(526, 342, 203, 62);
      gamePanel.add(option4Btn);
+     
+     option1Btn.setBounds(140, 228, 203, 40);
+     option2Btn.setBounds(526, 228, 203, 40);
+     option3Btn.setBounds(140, 342, 203, 40);
+     option4Btn.setBounds(526, 342, 203, 40);
+     
+ 
+     optionGroup = new ButtonGroup();
+     optionGroup.add(option1Btn);
+     optionGroup.add(option2Btn);
+     optionGroup.add(option3Btn);
+     optionGroup.add(option4Btn);
+     
+     btnSubmitAnswer = new JButton("Submit Answer");
+     btnSubmitAnswer.setFont(new Font("Tahoma", Font.PLAIN, 18));
+     btnSubmitAnswer.setBounds(345, 420, 180, 50);
+     gamePanel.add(btnSubmitAnswer);
+
      
      questionField = new JTextPane();
      questionField.setFont(new Font("Tahoma", Font.PLAIN, 22));
@@ -238,10 +243,22 @@ public class CompetitorPanel extends JFrame {
      btnPlay.setBounds(345, 174, 180, 51);
      initialPanel.add(btnPlay);
 
-     option1Btn.addActionListener(e -> checkAnswer(option1Btn.getText()));
-     option2Btn.addActionListener(e -> checkAnswer(option2Btn.getText()));
-     option3Btn.addActionListener(e -> checkAnswer(option3Btn.getText()));
-     option4Btn.addActionListener(e -> checkAnswer(option4Btn.getText()));
+     btnSubmitAnswer.addActionListener(e -> {
+    	    btnSubmitAnswer.setEnabled(false); 
+
+    	    String selectedAnswer = getSelectedAnswer();
+    	    if (selectedAnswer == null) {
+    	        JOptionPane.showMessageDialog(null, "Please select an answer!", "Warning", JOptionPane.WARNING_MESSAGE);
+    	        btnSubmitAnswer.setEnabled(true); 
+    	        return;
+    	    }
+
+    	    checkAnswer(selectedAnswer); 
+
+    	    btnSubmitAnswer.setEnabled(true);
+    	});
+
+     
 
      btnPlay.addActionListener(e -> {
          initialPanel.setVisible(false);
@@ -284,17 +301,21 @@ public class CompetitorPanel extends JFrame {
                     Name name = new Name(firstName, middleName, lastName);
                     competitor = new Competitor(id, name, level, country, age, scores);
 
-                 // Set UI fields
+                    // ✅ Set UI fields
+                    competitorIdField.setText(String.valueOf(competitor.getId()));
                     nameField.setText(competitor.getName());
                     usernameField.setText(username);
                     levelField.setText(competitor.getLevel().toString());
                     ageField.setText(String.valueOf(competitor.getAge()));
                     countryField.setText(competitor.getCountry());
 
-                    // Update GUI score table
+                    // ✅ Update GUI score table
                     updateScoreTable(scores);
 
-                    // Count non-zero scores to determine play eligibility
+                    // ✅ **Update highest score table on login**
+                    updateHighestScoreTable(scores);
+
+                    // ✅ Check play limit
                     int playedGames = 0;
                     for (int score : scores) {
                         if (score > 0) {
@@ -346,11 +367,11 @@ public class CompetitorPanel extends JFrame {
                 return false;
             }
         };
-        table.setModel(model);
+        scoreTable.setModel(model);
 
         // Ensure the table has 5 score slots + overall score
         for (int i = 0; i < 5; i++) {
-            table.setValueAt(i < scores.length ? scores[i] : 0, 0, i);
+            scoreTable.setValueAt(i < scores.length ? scores[i] : 0, 0, i);
         }
 
         // Calculate and set the overall score
@@ -358,9 +379,30 @@ public class CompetitorPanel extends JFrame {
         for (int score : scores) {
             overallScore += score;
         }
-        table.setValueAt(overallScore, 0, 5);
+        scoreTable.setValueAt(overallScore, 0, 5);
     }
 
+    private void updateHighestScoreTable(int[] scores) {
+        highestTableModel.setRowCount(0); // Clear previous data before updating
+
+        List<int[]> scoreList = new ArrayList<>();
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] > 0) { // Only consider non-zero scores
+                scoreList.add(new int[]{scores[i], i + 1}); // Store score and game number
+            }
+        }
+
+        // Sort the list in descending order based on scores
+        scoreList.sort((a, b) -> Integer.compare(b[0], a[0])); // Descending order
+
+        // Populate the table with sorted scores
+        for (int[] score : scoreList) {
+            highestTableModel.addRow(new Object[]{score[0], "Game " + score[1]});
+        }
+    }
+
+
+    
     public List<Question> fetchQuestion(Competitor comp) {
         List<Question> questionList = new ArrayList<>();
 
@@ -377,7 +419,7 @@ public class CompetitorPanel extends JFrame {
         String sql = "SELECT * FROM question WHERE level = ?";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)){
 
             stmt.setString(1, comp.getLevel().toString());
 
@@ -410,6 +452,8 @@ public class CompetitorPanel extends JFrame {
 
         // Count non-zero scores to check if the player has played 5 times
         int playedGames = 0;
+        selectedQuestions.clear();
+        
         for (int score : scores) {
             if (score > 0) {
                 playedGames++;
@@ -427,7 +471,7 @@ public class CompetitorPanel extends JFrame {
             JOptionPane.showMessageDialog(null, "Not enough questions in the database!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        
         // Shuffle and pick 5 random questions
         Collections.shuffle(questionlist, new Random());
         selectedQuestions = questionlist.subList(0, 5);
@@ -446,30 +490,38 @@ public class CompetitorPanel extends JFrame {
         Question currentQuestion = selectedQuestions.get(currentQuestionIndex);
         questionField.setText(currentQuestion.getQuestion());
 
-        // Set answer options on buttons
+        optionGroup.clearSelection(); // Ensure no previous selection remains
         option1Btn.setText(currentQuestion.getOption1());
         option2Btn.setText(currentQuestion.getOption2());
         option3Btn.setText(currentQuestion.getOption3());
         option4Btn.setText(currentQuestion.getOption4());
+
     }
 
     private void checkAnswer(String selectedAnswer) {
+        if (selectedAnswer == null) {
+            JOptionPane.showMessageDialog(null, "Please select an answer!", "Warning", JOptionPane.WARNING_MESSAGE);
+            return; // Stop execution if no answer is selected
+        }
+
         Question currentQuestion = selectedQuestions.get(currentQuestionIndex);
         if (selectedAnswer.equals(currentQuestion.getAnswer())) {
-            playerScore += 1; 
+            playerScore += 1;
         }
 
         currentQuestionIndex++;
         displayQuestion();
     }
 
+
     private void endGame() {
+        // Show final score message
         JOptionPane.showMessageDialog(null, "Game Over! Your score: " + playerScore, "Game Over", JOptionPane.INFORMATION_MESSAGE);
 
         // Save updated score to database
         updateScoreInDatabase(playerScore);
 
-        // ✅ **Re-check play limit AFTER score is updated**
+        // Count how many games have been played
         int playedGames = 0;
         for (int score : competitor.getScoreArray()) {
             if (score > 0) {
@@ -477,18 +529,35 @@ public class CompetitorPanel extends JFrame {
             }
         }
 
-        // ✅ **Disable play button if limit reached**
+        // 🚀 **Check if the limit (5 games) is reached BEFORE asking to play again**
         if (playedGames >= 5) {
+            JOptionPane.showMessageDialog(null, "You have reached the maximum play limit (5 games).", "Limit Reached", JOptionPane.WARNING_MESSAGE);
             btnPlay.setEnabled(false);
             btnPlay.setText("Limit Reached");
+            return; // ⛔ Stop further execution, no more games allowed
         }
 
-        // Update GUI table with new score
-        updateScoreTable(competitor.getScoreArray());
+        // 🟢 **Ask the user if they want to play again**
+        int response = JOptionPane.showConfirmDialog(null, "Do you want to play again?", "Play Again", JOptionPane.YES_NO_OPTION);
 
-        gamePanel.setVisible(false);
-        initialPanel.setVisible(true);
+        if (response == JOptionPane.YES_OPTION) {
+        	initialPanel.setVisible(false);
+            startGame();
+            gamePanel.setVisible(true);
+            
+        } else {
+            JOptionPane.showMessageDialog(null, "Thanks for playing!", "Goodbye", JOptionPane.INFORMATION_MESSAGE);
+            gamePanel.setVisible(false);
+            initialPanel.setVisible(true);
+        }
+
+        // ✅ Update the UI with new scores
+        updateScoreTable(competitor.getScoreArray());
+        updateHighestScoreTable(competitor.getScoreArray());
+        
     }
+
+
 
     private void updateScoreInDatabase(int newScore) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "")) {
@@ -532,11 +601,24 @@ public class CompetitorPanel extends JFrame {
 
             // ✅ **Refresh the UI immediately**
             updateScoreTable(scores);
-
+            updateHighestScoreTable(scores);
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Error updating score in database.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
+    
+    private String getSelectedAnswer() {
+        if (option1Btn.isSelected()) {
+            return option1Btn.getText();
+        } else if (option2Btn.isSelected()) {
+            return option2Btn.getText();
+        } else if (option3Btn.isSelected()) {
+            return option3Btn.getText();
+        } else if (option4Btn.isSelected()) {
+            return option4Btn.getText();
+        } else {
+            return null; // No option selected
+        }
+    }
 }

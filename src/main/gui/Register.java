@@ -7,9 +7,10 @@ import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.ResultSet;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -19,8 +20,6 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
 import main.component.CompetitionLevel;
-
-import javax.swing.JComboBox;
 
 public class Register extends JFrame {
 
@@ -164,10 +163,11 @@ public class Register extends JFrame {
         String country = countryField.getText();
         String password = new String(passwordField.getPassword());
         CompetitionLevel level = (CompetitionLevel) levelField.getSelectedItem();
+
         // Validation
         if (firstName.isEmpty() || lastName.isEmpty() || username.isEmpty() ||
             age.isEmpty() || country.isEmpty() || password.isEmpty() || level == null) {
-            JOptionPane.showMessageDialog(null, "All other fields must be filled.", "Register", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "All fields must be filled.", "Register", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -175,39 +175,51 @@ public class Register extends JFrame {
         String fullName = middleName.isEmpty() ? firstName + " " + lastName : firstName + " " + middleName + " " + lastName;
 
         try {
-        	 // Establish connection
+            // Establish connection
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
 
-            // Reset AUTO_INCREMENT if needed
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate("ALTER TABLE user AUTO_INCREMENT = 1");
-            stmt.close();
+            String checkUserSQL = "SELECT COUNT(*) FROM user WHERE username = ?";
+            PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSQL);
+            checkUserStmt.setString(1, username);
+            ResultSet rs = checkUserStmt.executeQuery();
 
-            // Insert data
-            String sql = "INSERT INTO user (name, age,level, country, scores, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            if (rs.next() && rs.getInt(1) > 0) {
+                JOptionPane.showMessageDialog(null, "Username already exists. Please choose another.", "Registration Error", JOptionPane.ERROR_MESSAGE);
+                rs.close();
+                checkUserStmt.close();
+                conn.close();
+                return; // Stop execution if user exists
+            }
+            rs.close();
+            checkUserStmt.close();
+
+            // ✅ **Step 2: Insert new user since username is unique**
+            String sql = "INSERT INTO user (name, age, level, country, scores, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, fullName);
             pstmt.setInt(2, Integer.parseInt(age));
-            pstmt.setString(3,level.name());
+            pstmt.setString(3, level.name());
             pstmt.setString(4, country);
             pstmt.setString(5, "0,0,0,0,0"); 
             pstmt.setString(6, username);
             pstmt.setString(7, password);
             pstmt.executeUpdate();
 
-            System.out.println("Data Inserted Successfully.");
+            JOptionPane.showMessageDialog(null, "Sign Up Successful.", "Sign Up", JOptionPane.INFORMATION_MESSAGE);
 
             // Close connections
             pstmt.close();
             conn.close();
-            JOptionPane.showMessageDialog(null, "Sign Up Successful.", "Sign Up", JOptionPane.INFORMATION_MESSAGE);
+
+            // Redirect to login page
+            Login login = new Login();
+            login.setVisible(true);
+            dispose();
+
         } catch (Exception e1) {
             e1.printStackTrace();
             JOptionPane.showMessageDialog(null, "Error during registration.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        
-        Login login = new Login();
-        login.setVisible(true);
-        dispose();
     }
+
 }
