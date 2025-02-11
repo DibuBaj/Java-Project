@@ -34,9 +34,6 @@ import main.component.Name;
 import main.component.Question;
 
 
-
-
-
 public class CompetitorPanel extends JFrame {
 
     private static final long serialVersionUID = 1L;
@@ -308,7 +305,7 @@ public class CompetitorPanel extends JFrame {
                     levelField.setText(competitor.getLevel().toString());
                     ageField.setText(String.valueOf(competitor.getAge()));
                     countryField.setText(competitor.getCountry());
-
+                    
                     // ✅ Update GUI score table
                     updateScoreTable(scores);
 
@@ -340,7 +337,7 @@ public class CompetitorPanel extends JFrame {
         }
     }
 
-    private int[] parseScores(String scoresStr) {
+    public int[] parseScores(String scoresStr) {
         int[] scores = new int[5]; // Default 5 zeros
 
         if (scoresStr == null || scoresStr.trim().isEmpty()) {
@@ -374,12 +371,7 @@ public class CompetitorPanel extends JFrame {
             scoreTable.setValueAt(i < scores.length ? scores[i] : 0, 0, i);
         }
 
-        // Calculate and set the overall score
-        int overallScore = 0;
-        for (int score : scores) {
-            overallScore += score;
-        }
-        scoreTable.setValueAt(overallScore, 0, 5);
+        scoreTable.setValueAt(competitor.getOverallScore(), 0, 5);
     }
 
     private void updateHighestScoreTable(int[] scores) {

@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -22,10 +23,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import main.component.CompetitionLevel;
+import main.component.Competitor;
+import main.component.Name;
 
 public class AdminPanel extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -44,7 +48,12 @@ public class AdminPanel extends JFrame {
 	private JTable beginnerTable;
 	private JTable intermediateTable;
 	private JTable advanceTable;
-	
+	private JTable allCompetitorTable;
+	private JTextField searchField;
+	private JLabel nameField, levelFieldComp ,ageField ,countryField;
+	private JTable table_1;
+	private JTable table_2;
+	private JLabel bestPerformer;
 	private void loadQuestions() {
 		
 		try {
@@ -117,7 +126,149 @@ public class AdminPanel extends JFrame {
 	        JOptionPane.showMessageDialog(null, "Error loading questions.", "Error", JOptionPane.ERROR_MESSAGE);
 	    }
 	}
+	
+	
+	public void loadCompetitor() {
+	    try {
+	        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
+	        String sql = "SELECT * FROM user";
+	        PreparedStatement pstmt = conn.prepareStatement(sql);
+	        ResultSet rs = pstmt.executeQuery();
 
+	        // Define column names for competitors (without Total Score)
+	        String[] competitorColumn = {"ID", "Name", "Age", "Level", "Country", "Score1", "Score2", "Score3", "Score4", "Score5"};
+
+	        // Create table model with column names and non-editable rows
+	        DefaultTableModel competitorModel = new DefaultTableModel(competitorColumn, 0) {
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false;
+	            }
+	        };
+
+	        System.out.println("=== Loading All Competitors from Database ===");
+
+	        // Populate the table with data from the database
+	        while (rs.next()) {
+	            // Retrieve competitor details
+	            int id = rs.getInt("id");
+	            String name = rs.getString("name");
+	            int age = rs.getInt("age");
+	            String level = rs.getString("level");
+	            String country = rs.getString("country");
+	            String scoreString = rs.getString("scores");
+	            String[] scoreArray = scoreString.split(",");
+
+	            // Convert score strings to integers, ensuring exactly 5 scores
+	            int[] scores = new int[5];
+	            for (int i = 0; i < 5; i++) {
+	                try {
+	                    scores[i] = (i < scoreArray.length) ? Integer.parseInt(scoreArray[i].trim()) : 0;
+	                } catch (NumberFormatException e) {
+	                    scores[i] = 0; // Default to 0 if parsing fails
+	                }
+	            }
+
+	            // Create a row with all competitor data (excluding total score)
+	            Object[] row = {id, name, age, level, country, scores[0], scores[1], scores[2], scores[3], scores[4]};
+
+	            // Print full competitor details to the console
+	            System.out.println("ID: " + id + " | Name: " + name + " | Age: " + age + " | Level: " + level + " | Country: " + country);
+	            System.out.println("Scores: [" + scores[0] + ", " + scores[1] + ", " + scores[2] + ", " + scores[3] + ", " + scores[4] + "]");
+	            System.out.println("------------------------------------------------");
+
+	            // Add row to the table model
+	            competitorModel.addRow(row);
+	        }
+
+	        // Assign model to JTable
+	        allCompetitorTable.setModel(competitorModel);
+
+	        System.out.println("=== Finished Loading Competitors ===");
+
+	        // Close resources
+	        rs.close();
+	        pstmt.close();
+	        conn.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        JOptionPane.showMessageDialog(null, "Error loading competitors.", "Error", JOptionPane.ERROR_MESSAGE);
+	    }  
+	}
+
+	
+	private int[] parseScores(String scoresStr) {
+        int[] scores = new int[5]; // Default 5 zeros
+
+        if (scoresStr == null || scoresStr.trim().isEmpty()) {
+            return scores; // Return default [0,0,0,0,0] if empty
+        }
+
+        // Split the comma-separated string and convert to int array
+        String[] parts = scoresStr.split(",");
+        for (int i = 0; i < parts.length && i < 5; i++) {
+            try {
+                scores[i] = Integer.parseInt(parts[i].trim());
+            } catch (NumberFormatException e) {
+                scores[i] = 0; // Handle invalid values safely
+            }
+        }
+        return scores;
+    }
+	
+	public Competitor searchCompetitorById(int compId) {
+	    Competitor competitor = null; // Default to null if not found
+
+	    try {
+	        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
+	        String sql = "SELECT * FROM user WHERE id = ?"; // Search by ID, not username
+	        PreparedStatement pstmt = conn.prepareStatement(sql);
+	        pstmt.setInt(1, compId);
+	        ResultSet rs = pstmt.executeQuery();
+
+	        // Ensure there's a result before accessing data
+	        if (rs.next()) {
+	            int id = rs.getInt("id");
+	            String fullName = rs.getString("name");
+	            int age = rs.getInt("age");
+	            String levelStr = rs.getString("level");
+	            String country = rs.getString("country");
+	            String scoreString = rs.getString("scores");
+
+	            // Convert level to Enum
+	            CompetitionLevel level = CompetitionLevel.valueOf(levelStr.toUpperCase());
+
+	            // Parse name into first, middle, last
+	            String[] nameParts = fullName.split(" ");
+	            String firstName = nameParts.length > 0 ? nameParts[0] : "";
+	            String middleName = nameParts.length > 2 ? nameParts[1] : "";
+	            String lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+	            int[] scores = parseScores(scoreString);
+	            
+	            // Create the Name object
+	            Name name = new Name(firstName, middleName, lastName);
+
+	            // Create the Competitor object
+	            competitor = new Competitor(id, name, level, country, age, scores);
+	            System.out.println(competitor.getFullDetails());
+	        } else {
+	            JOptionPane.showMessageDialog(null, "No competitor found with ID: " + compId, "Not Found", JOptionPane.WARNING_MESSAGE);
+	        }
+
+	        // Close resources
+	        rs.close();
+	        pstmt.close();
+	        conn.close();
+
+	    } catch (Exception e) {
+	        JOptionPane.showMessageDialog(null, "Error fetching data: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+	        e.printStackTrace();
+	    }
+
+	    return competitor; // Return the competitor (or null if not found)
+	}
+
+	
 	private void clearFields() {
 	    questionField.setText("");
 	    option1Field.setText("");
@@ -143,11 +294,96 @@ public class AdminPanel extends JFrame {
 	        levelField.setSelectedItem(CompetitionLevel.valueOf(level.toUpperCase()));
 	    }
 	}
+	
+	public void loadStatistics(boolean performer) {
+    try {
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", "root", "");
+        
+
+        String sql = "SELECT name, level, scores FROM user"; // Fetch name as well
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery();
+
+        // Initialize score frequency and top scores
+        int[] scoreFrequency = new int[6]; // Index 0 unused (1-5 scores)
+        int topBeginner = 0, topIntermediate = 0, topAdvanced = 0;
+        String topCompetitorName = "";  // Name of competitor with highest score
+        int highestScore = 0;  // Track highest total score
+
+        while (rs.next()) {
+            String name = rs.getString("name"); // Fetch competitor's name
+            String level = rs.getString("level");
+            String scoresString = rs.getString("scores");
+
+            int[] scores = parseScores(scoresString);
+
+            // Count frequency of each score (1-5)
+            for (int score : scores) {
+                if (score >= 1 && score <= 5) {
+                    scoreFrequency[score]++;
+                }
+            }
+
+            // Calculate total score for competitor
+            int totalScore = Arrays.stream(scores).sum();
+
+            // Update top scores for each level
+            if (level.equalsIgnoreCase("BEGINNER") && totalScore > topBeginner) {
+                topBeginner = totalScore;
+            } else if (level.equalsIgnoreCase("INTERMEDIATE") && totalScore > topIntermediate) {
+                topIntermediate = totalScore;
+            } else if (level.equalsIgnoreCase("ADVANCED") && totalScore > topAdvanced) {
+                topAdvanced = totalScore;
+            }
+
+            // Track competitor with highest total score
+            if (totalScore > highestScore) {
+                highestScore = totalScore;
+                topCompetitorName = name;
+            }
+        }
+
+        // Print computed statistics
+        if(performer == true) {      
+        	System.out.println("Competitor with Highest Score: " + topCompetitorName + " (Score: " + highestScore + ")");
+        }else if(performer == false) {        	
+        	System.out.println("Score Frequency: " + Arrays.toString(scoreFrequency));
+        	System.out.println("Top Beginner Score: " + topBeginner);
+        	System.out.println("Top Intermediate Score: " + topIntermediate);
+        	System.out.println("Top Advanced Score: " + topAdvanced);
+        }
+
+        // Populate Frequency Table (table_1)
+        DefaultTableModel freqModel = (DefaultTableModel) table_1.getModel();
+        freqModel.setRowCount(0); // Clear existing data
+        Object[] frequencyRow = {
+            scoreFrequency[1], scoreFrequency[2], scoreFrequency[3], scoreFrequency[4], scoreFrequency[5]
+        };
+        freqModel.addRow(frequencyRow);
+
+        // Populate Top Score Table (table_2)
+        DefaultTableModel topScoreModel = (DefaultTableModel) table_2.getModel();
+        topScoreModel.setRowCount(0); // Clear existing data
+        Object[] topScoreRow = { topBeginner, topIntermediate, topAdvanced };
+        topScoreModel.addRow(topScoreRow);
+
+        bestPerformer.setText("Competitor with Highest Score: " + topCompetitorName + " (Score: " + highestScore + ")");
+
+        // Close resources
+        rs.close();
+        pstmt.close();
+        conn.close();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(null, "Error loading statistics.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
 	/**
 	 * Create the frame.
 	 */
-	public AdminPanel() {
+	public AdminPanel(boolean console) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		setBounds(100, 100, 1800, 789);
@@ -559,6 +795,171 @@ public class AdminPanel extends JFrame {
 		});
 		logoutBtn_1.setBounds(1502, 11, 82, 23);
 		competitor.add(logoutBtn_1);
+		
+		JTabbedPane tabbedPane_2 = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane_2.setBounds(90, 61, 1399, 604);
+		competitor.add(tabbedPane_2);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		tabbedPane_2.addTab("All Competitor", null, scrollPane, null);
+		
+		String[] competitorColumn = {"ID","Name","Age","Level","Country","Score1","Score2","Score3","Score4","Score5"};
+		DefaultTableModel allCompetitorModel = new DefaultTableModel(competitorColumn, 0) { 
+	            @Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false;
+	            }
+	     };
+		allCompetitorTable = new JTable(allCompetitorModel);
+		scrollPane.setViewportView(allCompetitorTable);
+		
+		JPanel searchPanel = new JPanel();
+		tabbedPane_2.addTab("Search Competitor", null, searchPanel, null);
+		searchPanel.setLayout(null);
+		
+		JLabel lblNewLabel_1 = new JLabel("Enter Competitor ID :");
+		lblNewLabel_1.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_1.setBounds(94, 56, 141, 42);
+		searchPanel.add(lblNewLabel_1);
+		
+		searchField = new JTextField();
+		searchField.setBounds(264, 63, 260, 33);
+		searchPanel.add(searchField);
+		searchField.setColumns(10);
+		
+		JLabel fullNameLabel = new JLabel("Name:");
+        fullNameLabel.setBounds(94, 126, 46, 14);
+        searchPanel.add(fullNameLabel);
+
+        nameField = new JLabel("");
+        nameField.setBounds(186, 126, 185, 14);
+        searchPanel.add(nameField);
+
+        JLabel levelLabel = new JLabel("Level:");
+        levelLabel.setBounds(94, 165, 46, 14);
+        searchPanel.add(levelLabel);
+
+        levelFieldComp = new JLabel("");
+        levelFieldComp.setBounds(186, 165, 91, 14);
+        searchPanel.add(levelFieldComp);
+
+        JLabel ageLabel = new JLabel("Age:");
+        ageLabel.setBounds(94, 204, 46, 14);
+        searchPanel.add(ageLabel);
+
+        ageField = new JLabel("");
+        ageField.setBounds(186, 204, 46, 14);
+        searchPanel.add(ageField);
+
+        JLabel countryLabel = new JLabel("Country:");
+        countryLabel.setBounds(94, 241, 60, 14);
+        searchPanel.add(countryLabel);
+
+        countryField = new JLabel("");
+        countryField.setBounds(186, 241, 100, 14);
+        searchPanel.add(countryField);
+        
+        JLabel lblNewLabel_2 = new JLabel("Full Details:");
+        lblNewLabel_2.setBounds(94, 281, 80, 14);
+        searchPanel.add(lblNewLabel_2);
+        
+        JLabel lblNewLabel_2_1 = new JLabel("Short Details:");
+        lblNewLabel_2_1.setBounds(94, 348, 80, 14);
+        searchPanel.add(lblNewLabel_2_1);
+        
+        JTextPane fullDetailField = new JTextPane();
+		fullDetailField.setBackground(new Color(240, 240, 240));
+		fullDetailField.setBounds(186, 266, 338, 54);
+		searchPanel.add(fullDetailField);
+		
+		JTextPane shortDetailField = new JTextPane();
+		shortDetailField.setBackground(new Color(240, 240, 240));
+		shortDetailField.setBounds(186, 342, 338, 20);
+		searchPanel.add(shortDetailField);
+        
+        JButton searchBtn = new JButton("Search");
+        searchBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String input = searchField.getText().trim();
+                    if (input.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "Please enter a competitor ID.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+
+                    int competitorId = Integer.parseInt(input); 
+                    Competitor comp = searchCompetitorById(competitorId);
+
+                    if (comp != null) {
+                        nameField.setText(comp.getName()); 
+                        levelFieldComp.setText(comp.getLevel().toString());  
+                        ageField.setText(String.valueOf(comp.getAge())); 
+                        countryField.setText(comp.getCountry());
+                        fullDetailField.setText(comp.getFullDetails());
+                        shortDetailField.setText(comp.getShortDetails());
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Competitor not found.", "Search Result", JOptionPane.INFORMATION_MESSAGE);
+                        // Clear fields if no competitor found
+                        nameField.setText(""); 
+                        levelFieldComp.setText("");  
+                        ageField.setText(""); 
+                        countryField.setText("");
+                        fullDetailField.setText("");
+                        shortDetailField.setText("");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "Invalid ID. Please enter a numeric value.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+		searchBtn.setBounds(560, 62, 89, 35);
+		searchPanel.add(searchBtn);
+		
+		JPanel statistics = new JPanel();
+		tabbedPane_2.addTab("Statistics", null, statistics, null);
+		statistics.setLayout(null);
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(69, 87, 295, 49);
+		statistics.add(scrollPane_1);
+		
+		String statlabel1[] = {"1","2","3","4","5"};
+		
+		DefaultTableModel statmodel1 = new DefaultTableModel(statlabel1,0);
+		table_1 = new JTable(statmodel1);
+		scrollPane_1.setViewportView(table_1);
+		
+		JLabel lblNewLabel_3 = new JLabel("Frequency for each score:");
+		lblNewLabel_3.setBounds(69, 62, 191, 14);
+		statistics.add(lblNewLabel_3);
+		
+		JLabel lblNewLabel_3_1 = new JLabel("Top Score for each level:");
+		lblNewLabel_3_1.setBounds(69, 174, 191, 14);
+		statistics.add(lblNewLabel_3_1);
+		
+		JScrollPane scrollPane_1_1 = new JScrollPane();
+		scrollPane_1_1.setBounds(69, 222, 295, 49);
+		statistics.add(scrollPane_1_1);
+		String statlabel2[] = {"BEGINNER","INTERMEDIATE","ADVANCE"};
+		
+		DefaultTableModel statmodel2 = new DefaultTableModel(statlabel2,0);
+		table_2 = new JTable(statmodel2);
+		scrollPane_1_1.setViewportView(table_2);
+		
+		JLabel lblNewLabel_4 = new JLabel("Best Performer: ");
+		lblNewLabel_4.setBounds(69, 316, 92, 14);
+		statistics.add(lblNewLabel_4);
+		
+		bestPerformer = new JLabel("");
+		bestPerformer.setBounds(158, 316, 306, 14);
+		statistics.add(bestPerformer);
+		
+		
+		if(console == false) {			
+			loadCompetitor();
+			loadStatistics(false);
+		}
 
 		// Adjust the size of the outer tabs
 		for (int i = 0; i < tabbedPane.getTabCount(); i++) {

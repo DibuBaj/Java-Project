@@ -20,7 +20,8 @@ public class CompetitorTest {
 	@Test
 	public void testFullDetail() {
 		Name name1 = new Name("Keith", "John", "Talbot");
-        Competitor competitor1 = new Competitor(100, name1, CompetitionLevel.BEGINNER, "UK", 21);
+		int score[] = {5,5,5,5,5};
+        Competitor competitor1 = new Competitor(100, name1, CompetitionLevel.BEGINNER, "UK", 21,score);
         
         String expected = "Competitor number 100, name Keith John Talbot, country UK.\n"
                 + "Keith is a beginner aged 21 and has an overall score of 5.0.";
@@ -35,7 +36,8 @@ public class CompetitorTest {
 	@Test
 	public void testShortDetail() {
 		Name name2 = new Name("Hari","","Shrestha");
-		Competitor competitor2 = new Competitor(102, name2, CompetitionLevel.ADVANCED, "NEP", 35);
+		int score[] = {5,5,5,5,5};
+		Competitor competitor2 = new Competitor(102, name2, CompetitionLevel.ADVANCED, "NEP", 35 ,score);
 		
 		String expected = "CN 102 (HS) has overall score 5.0.";
 		String actual = competitor2.getShortDetails();

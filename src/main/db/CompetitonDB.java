@@ -9,7 +9,7 @@ public class CompetitonDB {
     static String user = "root";
     static String password = ""; 
 
-    static void createDB() {
+    public static void createDB() {
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/", user, password);
             System.out.println("Connection Successful");
@@ -27,7 +27,7 @@ public class CompetitonDB {
         }
     }
 
-    static void userTable() {
+    public static void userTable() {
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", user, password);
             System.out.println("Connection Successful");
@@ -54,7 +54,7 @@ public class CompetitonDB {
         }
     }
     
-    static void questionTable() {
+    public static void questionTable() {
     	
     	try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/competitiondb", user, password);

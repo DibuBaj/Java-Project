@@ -79,7 +79,7 @@ public class Login extends JFrame {
             
             if(usernameInput.equals("admin") && passwordInput.equals("admin") ) {
             	JOptionPane.showMessageDialog(Login.this, "Admin Login Successful!", "Admin Login", JOptionPane.INFORMATION_MESSAGE);
-            	AdminPanel adminpal = new AdminPanel();
+            	AdminPanel adminpal = new AdminPanel(false);
             	adminpal.setVisible(true);
             	dispose();
             } else {

@@ -7,8 +7,6 @@ public class Competitor {
     private String country;
     private int age;
     private int[] scores;
-//    private String username;
-//    private String password;
     
     // Constructor
     public Competitor(int id, Name name,CompetitionLevel level,String country, int age,int[] scores) {
@@ -61,10 +59,6 @@ public class Competitor {
         this.age = age;
     }
     
-    
-    
-    
-    
     public int[] getScoreArray() {
         return scores;
     }
@@ -73,17 +67,6 @@ public class Competitor {
     	this.scores = scores;
     }
     
-//    public String getUsername() {
-//    	return username;
-//    }
-//    
-//    public void setUsername(String username) {
-//    	this.username = username; 
-//    }
-//    
-//    public void setPassword(String password) {
-//    	this.password = password;
-//    }
     
 //    Get overall score
     public double getOverallScore() {
@@ -91,6 +74,7 @@ public class Competitor {
     	        return 0;
     	    }
     	    double sum = 0;
+    	    
     	    for (int score : scores) {
     	        sum += score;
     	    }
@@ -99,22 +83,26 @@ public class Competitor {
     
 //    Get competitor detail
     public String getFullDetails() {
-        return "Competitor number " + id + ", name " + name.getFullName() + ", country " + country + ".\n" +
-               name.getFirstName() + " is a " + level.toString().toLowerCase() + " aged " + age + 
-               " and has an overall score of " + getOverallScore() + ".";
+        String fullName = (name != null) ? name.getFullName() : "Unknown fullname";
+        String firstName = (name != null) ? name.getFirstName() : "Unknown firstname";
+        String levelString = (level != null) ? level.toString().toLowerCase() : "unknown level";
+        String countryString = (country != null) ? country : "Unknown";
+
+        // Ensure overall score is handled correctly
+        double overallScore = getOverallScore();
+
+        return "Competitor number " + id + ", name " + fullName + ", country " + countryString + ".\n" +
+               firstName + " is a " + levelString + " aged " + age + 
+               " and has an overall score of " + overallScore + ".";
     }
+
+
     
     public String getShortDetails() {
-        return "CN " + id + " (" + name.getInitials() + ") has overall score " + getOverallScore() + ".";
+        String initials = (name != null) ? name.getInitials() : "N/A";
+        
+        return "CN " + id + " (" + initials + ") has overall score " + getOverallScore() + ".";
     }
-    
-    public static void main(String[] args) {
-    	Name name1 = new Name("Keith", "John", "Talbot");
-    	int[] scores = {5,4,5,5,5};
-        Competitor competitor1 = new Competitor(100, name1,CompetitionLevel.BEGINNER, "UK", 21,scores);
-        System.out.println(competitor1.getFullDetails());
-        System.out.println(competitor1.getShortDetails());
-    }
-    
+   
     
 }
